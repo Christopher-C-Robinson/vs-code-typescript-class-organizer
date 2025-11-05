@@ -29,6 +29,14 @@ export class SourceCodeAnalyzer
         return elements;
     }
 
+    /**
+     * Extracts trailing comments at the end of the file.
+     * These are comments that appear after the last syntax node and are attached to the EndOfFileToken.
+     * This ensures commented-out code at the end of files is preserved during reorganization.
+     * 
+     * @param sourceFile The TypeScript source file to analyze
+     * @returns The trailing comments text, or null if there are no trailing comments
+     */
     public static getFileTrailer(sourceFile: ts.SourceFile)
     {
         // Get trailing comments from the EndOfFileToken

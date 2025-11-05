@@ -42,17 +42,21 @@ export class SourceCodePrinter
         printedSourceCode.removeConsecutiveEmptyLines();
         printedSourceCode.trim();
 
-        if (printedSourceCode.length > 0)
+        const hasContent = printedSourceCode.length > 0;
+        const hasTrailer = fileTrailer && fileTrailer.length > 0;
+
+        if (hasContent)
         {
             printedSourceCode.addNewLineAfter();
-        }
-
-        if (fileTrailer && fileTrailer.length > 0)
-        {
-            if (printedSourceCode.length > 0)
+            
+            if (hasTrailer)
             {
                 printedSourceCode.addNewLineAfter();
             }
+        }
+
+        if (hasTrailer)
+        {
             printedSourceCode.addAfter(fileTrailer);
         }
 
