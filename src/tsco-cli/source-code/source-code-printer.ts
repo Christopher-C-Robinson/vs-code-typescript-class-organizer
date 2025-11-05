@@ -48,7 +48,6 @@ export class SourceCodePrinter
         if (hasContent)
         {
             printedSourceCode.addNewLineAfter();
-            
             if (hasTrailer)
             {
                 printedSourceCode.addNewLineAfter();
