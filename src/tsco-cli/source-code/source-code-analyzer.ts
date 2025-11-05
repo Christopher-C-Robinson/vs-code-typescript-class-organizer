@@ -29,6 +29,29 @@ export class SourceCodeAnalyzer
         return elements;
     }
 
+    public static getFileTrailer(sourceFile: ts.SourceFile)
+    {
+        // Get trailing comments from the EndOfFileToken
+        const children = sourceFile.getChildren(sourceFile);
+        const eofToken = children.find(node => node.kind === ts.SyntaxKind.EndOfFileToken);
+        
+        if (eofToken)
+        {
+            const fullText = sourceFile.getFullText();
+            const commentRanges = ts.getLeadingCommentRanges(fullText, eofToken.pos);
+            
+            if (commentRanges && commentRanges.length > 0)
+            {
+                const start = commentRanges[0].pos;
+                const end = commentRanges[commentRanges.length - 1].end;
+                
+                return fullText.substring(start, end);
+            }
+        }
+        
+        return null;
+    }
+
     public static hasReference(sourceFile: ts.SourceFile, identifier: string)
     {
         return sourceFile.getChildren(sourceFile).some(node => this.findReference(node, sourceFile, identifier));

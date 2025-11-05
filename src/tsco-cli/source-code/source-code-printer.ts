@@ -30,7 +30,7 @@ export class SourceCodePrinter
 {
     // #region Public Static Methods (1)
 
-    public static print(fileHeader: string | null, nodeGroups: ElementNodeGroup[], configuration: Configuration)
+    public static print(fileHeader: string | null, nodeGroups: ElementNodeGroup[], fileTrailer: string | null, configuration: Configuration)
     {
         const printedSourceCode = this.printNodeGroups(nodeGroups, configuration);
 
@@ -45,6 +45,15 @@ export class SourceCodePrinter
         if (printedSourceCode.length > 0)
         {
             printedSourceCode.addNewLineAfter();
+        }
+
+        if (fileTrailer && fileTrailer.length > 0)
+        {
+            if (printedSourceCode.length > 0)
+            {
+                printedSourceCode.addNewLineAfter();
+            }
+            printedSourceCode.addAfter(fileTrailer);
         }
 
         return printedSourceCode;
