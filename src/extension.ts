@@ -179,7 +179,7 @@ async function onSave(event: vscode.TextDocumentWillSaveEvent)
                 if (organizedSourceCode !== sourceCode)
                 {
                     const start = new vscode.Position(0, 0);
-                    const end = new vscode.Position(event.document.lineCount, event.document.lineAt(event.document.lineCount - 1).text.length);
+                    const end = new vscode.Position(event.document.lineCount - 1, event.document.lineAt(event.document.lineCount - 1).text.length);
                     const range = new vscode.Range(start, end);
                     
                     event.waitUntil(Promise.resolve([vscode.TextEdit.replace(range, organizedSourceCode)]));
