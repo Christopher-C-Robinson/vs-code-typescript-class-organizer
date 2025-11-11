@@ -144,21 +144,60 @@ async function onOrganizeAll()
     }
 }
 
-async function onSave(sourceCodeFilePath: string)
+async function onSave(event: vscode.TextDocumentWillSaveEvent)
 {
-    if (settings.organizeOnSave)
+    if (settings.organizeOnSave && event.document.languageId === "typescript")
     {
-        const editor = vscode.window.visibleTextEditors.find(ed => ed.document.uri.fsPath === sourceCodeFilePath);
-
-        if (editor)
+        const sourceCodeFilePath = getFullPath(event.document.uri.fsPath);
+        
+        if (matches("**/*.ts", sourceCodeFilePath))
         {
-            if (await onOrganize(sourceCodeFilePath))
+            const configuration = await getConfiguration(settings.configurationFilePath);
+            const workspaceRootDirectoryPath = getWorkspaceRootDirectoryPath();
+            const sourceCodeDirectoryPath = workspaceRootDirectoryPath;
+            const sourceCodeFilePathRelative = getRelativePath(sourceCodeDirectoryPath, sourceCodeFilePath);
+
+            // test for include or exclude patterns
+            let include = true;
+            let exclude = false;
+
+            if (configuration.files.include.length > 0)
             {
-                savingHandler.dispose();
+                include = configuration.files.include.some(inc => matches(inc, sourceCodeFilePathRelative) || matches(inc, sourceCodeFilePathRelative.replace("../", "").replace("./", "")));
+            }
 
-                await editor.document.save();
+            if (configuration.files.exclude.length > 0)
+            {
+                exclude = configuration.files.exclude.some(exc => matches(exc, sourceCodeFilePathRelative) || matches(exc, sourceCodeFilePathRelative.replace("../", "").replace("./", "")));
+            }
 
-                savingHandler = vscode.workspace.onWillSaveTextDocument(async (e) => await onSave(e.document.uri.fsPath));
+            if (include && !exclude)
+            {
+                const sourceCode = event.document.getText();
+                const organizedSourceCode = await SourceCodeOrganizer.organizeSourceCode(sourceCodeFilePath, sourceCode, configuration);
+
+                if (organizedSourceCode !== sourceCode)
+                {
+                    const start = new vscode.Position(0, 0);
+                    const end = new vscode.Position(event.document.lineCount, event.document.lineAt(event.document.lineCount - 1).text.length);
+                    const range = new vscode.Range(start, end);
+                    
+                    event.waitUntil(Promise.resolve([vscode.TextEdit.replace(range, organizedSourceCode)]));
+                    
+                    log(`tsco organized ${sourceCodeFilePath}`);
+                }
+                else
+                {
+                    log(`tsco skipping organizing ${sourceCodeFilePath}, because it is already organized`);
+                }
+            }
+            else if (!include)
+            {
+                log(`tsco skipping organizing ${sourceCodeFilePath}, because it does not match file include patterns`);
+            }
+            else if (exclude)
+            {
+                log(`tsco skipping organizing ${sourceCodeFilePath}, because it matches file exclude patterns`);
             }
         }
     }
@@ -249,7 +288,7 @@ export function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(vscode.commands.registerCommand('tsco.organizeAll', async () => await onOrganizeAll()));
 
     vscode.workspace.onDidChangeConfiguration(() => settings = Settings.getSettings());
-    savingHandler = vscode.workspace.onWillSaveTextDocument(async (e) => await onSave(e.document.uri.fsPath));
+    context.subscriptions.push(vscode.workspace.onWillSaveTextDocument((e) => onSave(e)));
 
     setLogger({
         log: (message: string) => output.appendLine(message),
@@ -259,11 +298,10 @@ export function activate(context: vscode.ExtensionContext)
 
 // #endregion Exported Functions
 
-// #region Variables (3)
+// #region Variables (2)
 
 const output = vscode.window.createOutputChannel("tsco");
 
-let savingHandler: vscode.Disposable;
 let settings = Settings.getSettings();
 
 // #endregion Variables
