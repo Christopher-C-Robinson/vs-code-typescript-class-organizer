@@ -163,12 +163,12 @@ async function onSave(event: vscode.TextDocumentWillSaveEvent)
 
             if (configuration.files.include.length > 0)
             {
-                include = configuration.files.include.some(inc => matches(inc, sourceCodeFilePathRelative) || matches(inc, sourceCodeFilePathRelative.replace("../", "").replace("./", "")));
+                include = configuration.files.include.some(inc => matches(inc, sourceCodeFilePathRelative) || matches(inc, sourceCodeFilePathRelative.replaceAll("../", "").replaceAll("./", "")));
             }
 
             if (configuration.files.exclude.length > 0)
             {
-                exclude = configuration.files.exclude.some(exc => matches(exc, sourceCodeFilePathRelative) || matches(exc, sourceCodeFilePathRelative.replace("../", "").replace("./", "")));
+                exclude = configuration.files.exclude.some(exc => matches(exc, sourceCodeFilePathRelative) || matches(exc, sourceCodeFilePathRelative.replaceAll("../", "").replaceAll("./", "")));
             }
 
             if (include && !exclude)
@@ -229,12 +229,12 @@ async function organize(sourceCodeFilePath: string, configuration: Configuration
 
     if (configuration.files.include.length > 0)
     {
-        include = configuration.files.include.some(inc => matches(inc, sourceCodeFilePathRelative) || matches(inc, sourceCodeFilePathRelative.replace("../", "").replace("./", "")));
+        include = configuration.files.include.some(inc => matches(inc, sourceCodeFilePathRelative) || matches(inc, sourceCodeFilePathRelative.replaceAll("../", "").replaceAll("./", "")));
     }
 
     if (configuration.files.exclude.length > 0)
     {
-        exclude = configuration.files.exclude.some(exc => matches(exc, sourceCodeFilePathRelative) || matches(exc, sourceCodeFilePathRelative.replace("../", "").replace("./", "")));
+        exclude = configuration.files.exclude.some(exc => matches(exc, sourceCodeFilePathRelative) || matches(exc, sourceCodeFilePathRelative.replaceAll("../", "").replaceAll("./", "")));
     }
 
     if (include && !exclude)
