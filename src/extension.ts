@@ -180,24 +180,6 @@ function onSave(event: vscode.TextDocumentWillSaveEvent)
     {
         const sourceCodeFilePath = getFullPath(event.document.uri.fsPath);
         
-        // Only organize files that are NOT the active editor (i.e., files losing focus)
-        // When switching from file A to file B, we want to organize file A (losing focus), not file B (gaining focus)
-        const activeEditorPath = vscode.window.activeTextEditor ? getFullPath(vscode.window.activeTextEditor.document.uri.fsPath) : null;
-        const isActiveEditor = activeEditorPath && activeEditorPath.toLowerCase() === sourceCodeFilePath.toLowerCase();
-        
-        if (isActiveEditor && event.reason === vscode.TextDocumentSaveReason.FocusOut)
-        {
-            log(`tsco skipping organizing ${sourceCodeFilePath}, because it is the active editor being saved on focus out (should not happen)`);
-            return;
-        }
-        
-        // For non-FocusOut saves, only organize if the file is the active editor
-        if (event.reason !== vscode.TextDocumentSaveReason.FocusOut && !isActiveEditor)
-        {
-            log(`tsco skipping organizing ${sourceCodeFilePath}, because it is not the active editor`);
-            return;
-        }
-        
         if (matches("**/*.ts", sourceCodeFilePath))
         {
             event.waitUntil((async () => {
