@@ -172,11 +172,24 @@ async function onOrganizeAll()
     }
 }
 
-async function onSave(event: vscode.TextDocumentWillSaveEvent)
+function onSave(event: vscode.TextDocumentWillSaveEvent)
 {
+    log(`tsco onSave triggered for ${event.document.uri.fsPath}, reason: ${vscode.TextDocumentSaveReason[event.reason]}, languageId: ${event.document.languageId}, organizeOnSave: ${settings.organizeOnSave}`);
+    
     if (settings.organizeOnSave && event.document.languageId === "typescript")
     {
         const sourceCodeFilePath = getFullPath(event.document.uri.fsPath);
+        
+        // Only organize if the editor is visible (actively being edited)
+        const isVisible = vscode.window.visibleTextEditors.some(ed => 
+            getFullPath(ed.document.uri.fsPath) === sourceCodeFilePath
+        );
+        
+        if (!isVisible)
+        {
+            log(`tsco skipping organizing ${sourceCodeFilePath}, because the editor is not visible`);
+            return;
+        }
         
         if (matches("**/*.ts", sourceCodeFilePath))
         {
@@ -284,7 +297,7 @@ export function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(vscode.commands.registerCommand('tsco.organize', async () => await onOrganize(vscode.window.activeTextEditor?.document.uri.fsPath)));
     context.subscriptions.push(vscode.commands.registerCommand('tsco.organizeAll', async () => await onOrganizeAll()));
 
-    vscode.workspace.onDidChangeConfiguration(() => settings = Settings.getSettings());
+    context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(() => settings = Settings.getSettings()));
     context.subscriptions.push(vscode.workspace.onWillSaveTextDocument((e) => onSave(e)));
 
     setLogger({
